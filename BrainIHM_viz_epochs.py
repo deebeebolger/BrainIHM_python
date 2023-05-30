@@ -10,7 +10,6 @@ matplotlib.use('TkAgg')
 dir_base = '/Users/bolger/Documents/work/Projects/Brain-IHM'
 Group = ['Agent']
 DataType = 'EpochData'
-Sujet = 'S01'
 
 eog_channels = ['EXG1', 'EXG2', 'EXG3', 'EXG4', 'EXG5', 'EXG6', 'EXG7', 'EXG8']
 misc_channels = ['GSR1', 'GSR2']
