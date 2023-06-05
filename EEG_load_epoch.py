@@ -5,11 +5,11 @@ import glob
 import os
 import matplotlib.pyplot as plt
 
-Data_folder = '/Users/bolger/Documents/work/Projects/Brain-IHM/Data_Human'
-Save_folder = '/Users/bolger/Documents/work/Projects/Brain-IHM/Data_Human/EpochData'
+Data_folder = '/Users/bolger/Documents/work/Projects/Brain-IHM/Data_Agent'
+Save_folder = '/Users/bolger/Documents/work/Projects/Brain-IHM/Data_Agent/EpochData_bis'
 channels_txt = os.path.join(Data_folder, 'channels_ref.txt')
-subject = 'S01'
-block_name = ['S01-Film1', 'S01-Film4'] #
+subject = 'S33'
+block_name = ['S33-Film2'] #, 'S01-Film4'
 subject_folder = os.path.join(Data_folder, subject)
 curr_savepath = os.path.join(Save_folder, subject)
 if os.path.exists(curr_savepath):

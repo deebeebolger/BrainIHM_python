@@ -5,6 +5,8 @@ import glob
 import os
 import matplotlib
 import matplotlib.pyplot as plt
+from matplotlib.backend_bases import MouseButton
+from matplotlib.widgets import SpanSelector
 matplotlib.use('TkAgg')
 
 def sem_calc(evokedIn):
@@ -21,12 +23,22 @@ def sem_calc(evokedIn):
 
    return upperlim, lowlim
 
+def onselect(xmin, xmax):
+    indmin, indmax = np.searchsorted(x, (xmin, xmax))
+    indmax = min(len(times) - 1, indmax)
+
+    region_x = times[indmin:indmax]
+    region_y1 = y1[indmin:indmax]
+    region_y2 = y2[indmin:indmax]
+    print(region_x)
+    return region_x, region_y1, region_y2
+
 
 
 dir_base = '/Users/bolger/Documents/work/Projects/Brain-IHM'
-Groups = ['Human', 'Agent']
+Groups = ['Human', 'Human']
 # Define the video-type and the feedback types.
-Conds2plot = ['Congru-Congru', 'Congru-Congru']  # Needs to be the same length as groups.
+Conds2plot = ['Congru-Congru', 'InCongru-Congru']  # Needs to be the same length as groups.
 
 # Initialize the data.
 EvokedAll_cond = []
@@ -103,6 +115,9 @@ for axs, ecurr in zip(axes.ravel(), eindx):
     lower1 = Lims_lower[0]
     lower2 = Lims_lower[1]
 
+    y1 = EvokedAll_cond[ecurr, :, 0]
+    y2 = EvokedAll_cond[ecurr, :, 1]
+    x = times
     axs.plot(times, EvokedAll_cond[ecurr, :, 0], 'b-', label=condnames[0])
     axs.plot(times, upper1[ecurr, :], 'b-')
     axs.plot(times, lower1[ecurr, :], 'b-')
@@ -117,12 +132,22 @@ for axs, ecurr in zip(axes.ravel(), eindx):
     axs.set_title(channoms[ecurr])
     axs.invert_yaxis()
     axs.set_frame_on(0)
-    axs.set_ylim(bottom=5*(pow(10, -6)), top=-1*(pow(10, -6)))
+    axs.set_ylim(bottom=6*(pow(10, -6)), top=-3*(pow(10, -6)))
     if counter<= ((rows*cols)-cols)-1:
         axs.set_xlabel(' ')
         axs.get_xaxis().set_ticks([])
     elif counter>((rows*cols)-cols)-1:
         axs.set_xlabel('time (seconds)')
+
+    span = SpanSelector(
+        axs,
+        onselect,
+        "horizontal",
+        useblit=True,
+        props=dict(alpha=0.5, facecolor="tab:blue"),
+        interactive=True,
+        drag_from_anywhere=True
+    )
 
     counter+=1
 
@@ -133,3 +158,8 @@ plt.show()
 # Add interactive plots to select intervals and plot the topographies.
 # This can be carried out using mne.viz.plot_topomap()
 # The above function takes the data in array form..Perfect!!
+
+
+
+
+#mne.viz.plot_topoplot()
