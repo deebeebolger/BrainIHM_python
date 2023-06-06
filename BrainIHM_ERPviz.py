@@ -9,6 +9,9 @@ from matplotlib.backend_bases import MouseButton
 from matplotlib.widgets import SpanSelector
 matplotlib.use('TkAgg')
 
+
+curr_ax = []
+
 def sem_calc(evokedIn):
    """
    Function to calculate the standard error of the mean for each channel taking into account all subjects.
@@ -23,20 +26,8 @@ def sem_calc(evokedIn):
 
    return upperlim, lowlim
 
-def onselect(xmin, xmax):
-    indmin, indmax = np.searchsorted(x, (xmin, xmax))
-    indmax = min(len(times) - 1, indmax)
-
-    region_x = times[indmin:indmax]
-    region_y1 = y1[indmin:indmax]
-    region_y2 = y2[indmin:indmax]
-    print(region_x)
-    return region_x, region_y1, region_y2
-
-
-
 dir_base = '/Users/bolger/Documents/work/Projects/Brain-IHM'
-Groups = ['Human', 'Human']
+Groups = ['Agent', 'Agent']
 # Define the video-type and the feedback types.
 Conds2plot = ['Congru-Congru', 'InCongru-Congru']  # Needs to be the same length as groups.
 
@@ -97,14 +88,13 @@ for gcount, gcurr in enumerate(Groups):
 
 
 ## Plot the ERP data for pre-defined electrodes
-roi = ['F3', 'Fz', 'F4', 'FC3', 'FCz', 'FC4', 'C3', 'Cz', 'C4',
-       'P3', 'Pz', 'P4']
+roi = ['C3', 'Cz', 'C4']  #
 eindx = [channoms.index(elabels) for elabels in roi]
 shape_ev = np.shape(EvokedAll_cond)
 
-rows = 4
-cols = 3
-fig, axes = plt.subplots(nrows=rows,ncols=cols, figsize=(20,20))
+rows = len(roi)
+cols = 1
+fig, axes = plt.subplots(rows, cols, figsize=(20,20))
 counter = 0
 
 for axs, ecurr in zip(axes.ravel(), eindx):
@@ -133,33 +123,58 @@ for axs, ecurr in zip(axes.ravel(), eindx):
     axs.invert_yaxis()
     axs.set_frame_on(0)
     axs.set_ylim(bottom=6*(pow(10, -6)), top=-3*(pow(10, -6)))
-    if counter<= ((rows*cols)-cols)-1:
-        axs.set_xlabel(' ')
-        axs.get_xaxis().set_ticks([])
-    elif counter>((rows*cols)-cols)-1:
+    axs.set_xticks(np.arange(-0.25, 0.85, 0.05))
+    if counter == len(roi)-1:
         axs.set_xlabel('time (seconds)')
-
-    span = SpanSelector(
-        axs,
-        onselect,
-        "horizontal",
-        useblit=True,
-        props=dict(alpha=0.5, facecolor="tab:blue"),
-        interactive=True,
-        drag_from_anywhere=True
-    )
 
     counter+=1
 
 plt.legend()
+
+chnom = []
+def onclick(event):
+    if event.inaxes:
+        curr_ax[:] = [event.inaxes]
+
+def onselect(xmin, xmax):
+    indmin, indmax = np.searchsorted(x, (xmin, xmax))
+    indmax = min(len(times) - 1, indmax)
+    region_x = times[indmin:indmax]
+    region_y1 = y1[indmin:indmax]
+    region_y2 = y2[indmin:indmax]
+    print(region_x)
+    for ax, span in zip(axes, span_list):
+        if ax != curr_ax[0]:
+            span.set_visible(False)
+    fig.canvas.draw_idle()
+    chnom = curr_ax[0].get_title()
+    print(chnom)
+    fig2, axes2 = plt.subplots(1, 2, figsize=(20, 20))
+    counter = 0
+    for aindx, ax in enumerate(axes2):
+        data1 = np.mean(EvokedAll_cond[:, indmin:indmax, counter], axis=1)
+        im, cn = mne.viz.plot_topomap(data1, EvokedLoad[0].info, vlim=(-3*(pow(10, -6)), 6*(pow(10, -6))), axes=ax)
+        tmin = round(times[indmin]*1000, 1)
+        tmax = round(times[indmax] * 1000, 1)
+        ax.set_title(chnom+': '+condnames[counter]+' ('+ str(tmin)+'-'+str(tmax)+'ms'+')')
+        cax = fig2.colorbar(im, ax=ax)
+        cax.set_label(r"Magnitude ($\mu$V)")
+        counter += 1
+
+
+span_list = [SpanSelector(
+    ax,
+    onselect,
+    "horizontal",
+    useblit=True,
+    props=dict(alpha=0.2, facecolor="tab:blue"),
+    interactive=True,
+    drag_from_anywhere=True
+) for ax in axes]
+
+plt.connect('button_press_event', onclick)
+
 plt.show()
 
 
-# Add interactive plots to select intervals and plot the topographies.
-# This can be carried out using mne.viz.plot_topomap()
-# The above function takes the data in array form..Perfect!!
 
-
-
-
-#mne.viz.plot_topoplot()
